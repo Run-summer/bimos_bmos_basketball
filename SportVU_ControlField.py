@@ -9,8 +9,8 @@ https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking/tree/master
 
 Data naming explanation:
 t_data: tracking data per game
-    ---s_data: tracking data per scene, also as t_data[s_id] where s_id is a scene id
-        ---f_data: tracking data per frame, also as t_data[s_id][f_id] where f_id is a frame id
+    ---t_data_scene: tracking data per scene, also as t_data[s_id] where s_id is a scene id
+        ---t_data_frame: tracking data per frame, also as t_data[s_id][f_id] where f_id is a frame id
 
 @author: Rikako Kono
 """
@@ -48,31 +48,31 @@ dribble_velocity_array = [
     ]
 
 class Player:
-    def __init__(self, pid_idx, f_data, teamside, params, fit_params, integral_xmin):
-        self.id_idx = pid_idx                                       # player index within 10 players, return 0-9
-        self.bid = self.get_player_id_with_ball(f_data)             # player index (0-9) with ball, return None if the ball isn't holded
-        self.teamside = teamside                                    # 'attacker' or 'defender'
-        self.params = params                                        # parameter dictionary
-        self.position = self.get_position(f_data)                   # player position np.array([x, y])
-        self.velocity = self.get_velocity(f_data)                   # player velocity np.array([vx, vy])
-        self.fit_params = fit_params                                # fitted parameter for tau_true - tau_exp distribution
-        self.integral_xmin = integral_xmin                          # xmin for tau_true - tau_exp distribution integration 
+    def __init__(self, pid_idx, t_data_frame, teamside, params, fit_params, integral_xmin):
+        self.id_idx = pid_idx                            # player index within 10 players, return 0-9
+        self.bid = self.get_player_id_with_ball(t_data_frame)  # player index (0-9) with ball, return None if the ball isn't holded
+        self.teamside = teamside                         # 'attacker' or 'defender'
+        self.params = params                             # parameter dictionary
+        self.position = self.get_position(t_data_frame)        # player position np.array([x, y])
+        self.velocity = self.get_velocity(t_data_frame)        # player velocity np.array([vx, vy])
+        self.fit_params = fit_params                     # fitted parameter for tau_true - tau_exp distribution
+        self.integral_xmin = integral_xmin               # xmin for tau_true - tau_exp distribution integration 
         self.time_to_intercept = 0.0
         self.probability_to_intercept = 0.0
         self.PPCF = 0.0
 
-    def get_player_id_with_ball(self, f_data):
-        if f_data[BALL_PID_IDX] == 0:
+    def get_player_id_with_ball(self, t_data_frame):
+        if t_data_frame[BALL_PID_IDX] == 0:
             return None
         else:
-            return int(f_data[BALL_PID_IDX]) - 1
+            return int(t_data_frame[BALL_PID_IDX]) - 1
     
-    def get_position(self, f_data):
-        pos = np.array([f_data[PLAYER_POSITIONS][self.id_idx * 2], f_data[PLAYER_POSITIONS][self.id_idx * 2 + 1]])
+    def get_position(self, t_data_frame):
+        pos = np.array([t_data_frame[PLAYER_POSITIONS][self.id_idx * 2], t_data_frame[PLAYER_POSITIONS][self.id_idx * 2 + 1]])
         return pos if not np.any(np.isnan(pos)) else np.array([0.0, 0.0])
     
-    def get_velocity(self, f_data):
-        vel = np.array([f_data[PLAYER_VELOCITIES][self.id_idx * 2], f_data[PLAYER_VELOCITIES][self.id_idx * 2 + 1]])
+    def get_velocity(self, t_data_frame):
+        vel = np.array([t_data_frame[PLAYER_VELOCITIES][self.id_idx * 2], t_data_frame[PLAYER_VELOCITIES][self.id_idx * 2 + 1]])
         return vel if not np.any(np.isnan(vel)) else np.array([0.0, 0.0])
     
     def reset_PPCF(self):
@@ -125,10 +125,10 @@ class Player:
             
         return self.probability_to_intercept
 
-def initialise_players(f_data, teamside, params, fit_params, integral_xmin):
+def initialise_players(t_data_frame, teamside, params, fit_params, integral_xmin):
     ids_offset = 0 if teamside == 'attacker' else 5
     player_ids_idx = [i + ids_offset for i in range(5)]
-    return [Player(pid_idx, f_data, teamside, params, fit_params, integral_xmin) for pid_idx in player_ids_idx if not np.isnan(pid_idx)]
+    return [Player(pid_idx, t_data_frame, teamside, params, fit_params, integral_xmin) for pid_idx in player_ids_idx if not np.isnan(pid_idx)]
 
 def default_model_params(accel, kappa, lam, att_reaction_time, def_reaction_time):
     params = {
@@ -171,7 +171,7 @@ def calculate_ball_travel_time(ball_start_pos, target_position, ball_speed):
     assert ball_travel_time >= 0, "Ball travel time is less than zero"
     return ball_travel_time
 
-def generate_pitch_control_for_event(s_id, f_id, t_data, params, fit_params, integral_xmin, version, field_dimen=(14., 15.), n_grid_cells_x=14):
+def generate_pitch_control_for_event(t_data, s_id, f_id, params, fit_params, integral_xmin, version, field_dimen=(14., 15.), n_grid_cells_x=14):
     """
     Return PPCF/PBCF 2d array and relevant players information. Variables explanation:
     t_data: tracking dataset per game
@@ -179,7 +179,7 @@ def generate_pitch_control_for_event(s_id, f_id, t_data, params, fit_params, int
     f_id: frame id
     params: default_model_params()
     fit_parames, integration_xmin: parameters used for probability_intercept_ball()
-    version: "BMOS" or "BIMOS"
+    version: "BMOS", "BIMOS", "PPCF", or "PBCF"
     """
     # current ball position (x, y)
     ball_start_pos = np.array(t_data[s_id][f_id][BALL_POSITION][:2])
@@ -219,7 +219,7 @@ def generate_pitch_control_for_event(s_id, f_id, t_data, params, fit_params, int
                 bv_dribble = dribble_velocity_array[-1]
 
             # calculate PPCF or PBCF
-            if version == "BMOS":
+            if version == "BMOS" or version == "PPCF":
                 rel_att_ids_pass, rel_def_ids_pass, PPCFa_pass, PPCFd_pass = calculate_ppcf_pass(
                                                                                     np.array([x, y]), attacking_players, defending_players, 
                                                                                     ball_start_pos, params, bv_pass)
@@ -231,7 +231,7 @@ def generate_pitch_control_for_event(s_id, f_id, t_data, params, fit_params, int
                 # PPCFa[i, j], PPCFd[i, j] = rate_pass * PPCFa_pass + rate_dribble * PPCFa_dribble, rate_pass * PPCFd_pass + rate_dribble * PPCFd_dribble
                 PPCFa[i, j], PPCFd[i, j] = PPCFa_pass, PPCFd_pass
                 
-            elif version == "BIMOS":
+            elif version == "BIMOS" or version == "PBCF":
                 rel_att_ids_pass, rel_def_ids_pass, PBCFa_pass, PBCFd_pass = calculate_pbcf_pass(
                                                                                     np.array([x, y]), attacking_players, defending_players, 
                                                                                     ball_start_pos, params, bv_pass)
@@ -242,21 +242,21 @@ def generate_pitch_control_for_event(s_id, f_id, t_data, params, fit_params, int
                 rel_att_ids[i, j], rel_def_ids[i, j] = rel_att_ids_pass, rel_def_ids_pass                               
                 PBCFa[i, j], PBCFd[i, j] = rate_pass * PBCFa_pass + rate_dribble * PBCFa_dribble, rate_pass * PBCFd_pass + rate_dribble * PBCFd_dribble
 
-    if version == "BMOS":
+    if version == "BMOS" or version == "PPCF":
         return np.flipud(PPCFa), np.flipud(PPCFd), np.flipud(rel_att_ids), np.flipud(rel_def_ids)
-    elif version == "BIMOS":
+    elif version == "BIMOS" or version == "PBCF":
         return np.flipud(PBCFa), np.flipud(PBCFd), np.flipud(rel_att_ids), np.flipud(rel_def_ids)
 
-def one_pixel_pitch_control_for_event(target_position, s_id, f_id, t_data, params, fit_params, integral_xmin, version):
+def one_pixel_pitch_control_for_event(t_data, s_id, f_id, target_position, params, fit_params, integral_xmin, version):
     """
     Return PPCF/PBCF value in certain target_position.
-    target_position: position to calculate PPCF/PBCF
     t_data: tracking dataset per game
     s_id: scene id
     f_id: frame id
+    target_position: position to calculate PPCF/PBCF
     params: default_model_params()
     fit_parames, integration_xmin: parameters used for probability_intercept_ball()
-    version: "BMOS" or "BIMOS"
+    version: "BMOS", "BIMOS", "PPCF", or "PBCF"
     """
     # current ball position (x, y)
     ball_start_pos = np.array(t_data[s_id][f_id][BALL_POSITION][:2])
@@ -283,7 +283,7 @@ def one_pixel_pitch_control_for_event(target_position, s_id, f_id, t_data, param
         bv_dribble = dribble_velocity_array[-1]
     
     # calculate PPCF or PBCF
-    if version == "BMOS":
+    if version == "BMOS" or version == "PPCF":
         _, _, PPCFa_pass, PPCFd_pass = calculate_ppcf_pass(
                                                 target_position, attacking_players, defending_players, 
                                                 ball_start_pos, params, bv_pass)
@@ -295,7 +295,7 @@ def one_pixel_pitch_control_for_event(target_position, s_id, f_id, t_data, param
                     rate_pass * PPCFd_pass + rate_dribble * PPCFd_dribble
         return PPCFa, PPCFd
 
-    elif version == "BIMOS":
+    elif version == "BIMOS" or version == "PBCF":
         _, _, PBCFa_pass, PBCFd_pass = calculate_pbcf_pass(
                                             target_position, attacking_players, defending_players, 
                                             ball_start_pos, params, bv_pass)

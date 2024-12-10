@@ -2,8 +2,8 @@
 Module for calculating the function f(r,t) or f^b(t|r), which is the probability that a player will reach target position r before t.
 
 Event Data Structure:
-all_events = sio.load_event_data(game, onball=False): event data per game
-    ---all_events[s_id][f_id]: event data per frame, where s_id is a scene id, and f_id is a frame id
+all_e_data = sio.load_event_data(game, onball=False): event data per game
+    ---all_e_data[s_id][f_id]: event data per frame, where s_id is a scene id, and f_id is a frame id
         --- [f_id, event_label, score, ball_x, ball_y, ball_holder_pid_idx, calc_fid, last_choice, calc_posx, calc_posy]
             event_label: current frame's on-ball event name (see EVENT_LABELS dictionary)
             ball_x, ball_y: current ball position
@@ -63,21 +63,27 @@ def get_params(accel, r_time, vmax):
     # obtain tau_true - tau_exp array as hist_array
     for game in tqdm(np.arange(1, N_TEST_GAMES+1)):
         # load trackiing data and on-ball event data
-        t_data = sio.load_t_data(game, onball=True)
-        events = sio.load_event_data(game, onball=True)
+        t_data = sio.load_tracking_data(game, onball=True)
+        e_data = sio.load_event_data(game, onball=True)
 
-        for s_data, event in zip(t_data, events):
-            if len(event) >= 2:
-                # when more than two on-ball events happen
-                for f_data, f_data_next, frame, frame_next in zip(s_data[:-1], s_data[1:], event[:-1], event[1:]):
-                    if frame[EVENT_LABEL] in [EVENT_LABELS['pass'], EVENT_LABELS['catch and pass'], EVENT_LABELS['catch'], EVENT_LABELS['handoff catch']]:
-                        true_tau = f_data[SHOT_CLOCK_ID] - f_data_next[SHOT_CLOCK_ID]
-                        exp_tau = calc_expected_tau(f_data, f_data_next, frame, frame_next, accel, r_time, vmax)
-                        if true_tau > 0:
-                            hist_array.append(true_tau - exp_tau)
+        for t_data_scene, e_data_scene in zip(t_data, e_data):
+            if not len(e_data_scene) >= 2:
+                continue
+
+            for t_data_frame, t_data_frame_next, e_data_frame, e_data_frame_next \
+                                in zip(t_data_scene[:-1], t_data_scene[1:], e_data_scene[:-1], e_data_scene[1:]):
+                if e_data_frame[EVENT_LABEL] in [EVENT_LABELS['pass'], EVENT_LABELS['catch and pass'], 
+                                                 EVENT_LABELS['handoff catch and pass'],
+                                                 EVENT_LABELS['catch'], EVENT_LABELS['handoff catch']]:
+                    true_tau = t_data_frame[SHOT_CLOCK_ID] - t_data_frame_next[SHOT_CLOCK_ID]
+                    exp_tau = calc_expected_tau(t_data_frame, t_data_frame_next, e_data_frame, 
+                                                e_data_frame_next, accel, r_time, vmax)
+                    if true_tau > 0:
+                        hist_array.append(true_tau - exp_tau)
     try:
         # plot and fit tau_true - tau_exp distribution
-        hist = plt.hist(hist_array, bins=int((np.max(hist_array)-np.min(hist_array))/0.4), range=None, density=True, cumulative=True)
+        hist = plt.hist(hist_array, bins=int((np.max(hist_array)-np.min(hist_array))/0.4), 
+                        range=None, density=True, cumulative=True)
         x = [(hist[1][i] + hist[1][i+1]) / 2 for i in np.arange(len(hist[1])-1)]
         y = hist[0]
 
@@ -136,25 +142,27 @@ def calc_time_to_intercept(r_start, r_final, v_current, accel, r_time, vmax):
     # consider the situation velocity exceeds vmax
     if vini + t * accel > vmax:
         limit_time = (vmax - vini) / accel
-        remaining_distance = np.linalg.norm(r_final - adjust_position) - (vini * limit_time + 0.5 * accel * limit_time ** 2) 
+        remaining_distance = np.linalg.norm(r_final - adjust_position) \
+                                - (vini * limit_time + 0.5 * accel * limit_time ** 2) 
         time_to_intercept = r_time + limit_time + remaining_distance / vmax
     else:
         time_to_intercept = r_time + t
         
     return time_to_intercept
 
-def calc_expected_tau(f_data, f_data_next, frame, frame_next, accel, r_time, vmax):
+def calc_expected_tau(t_data_frame, t_data_frame_next, e_data_frame, e_data_frame_next, accel, r_time, vmax):
     """
     Return calc_time_to_intercept() depending on pass or dribble situation.
     """
-    if frame[EVENT_LABEL] in [EVENT_LABELS['pass'], EVENT_LABELS['catch and pass']]:
-        idx = int(frame_next[BALL_PID_IDX]) - 1
-    elif frame[EVENT_LABEL] in [EVENT_LABELS['catch'], EVENT_LABELS['handoff catch']]:
-        idx = int(frame[BALL_PID_IDX]) - 1
+    if e_data_frame[EVENT_LABEL] in [EVENT_LABELS['pass'], EVENT_LABELS['catch and pass'], 
+                                     EVENT_LABELS['handoff catch and pass']]:
+        idx = int(e_data_frame_next[BALL_PID_IDX]) - 1
+    elif e_data_frame[EVENT_LABEL] in [EVENT_LABELS['catch'], EVENT_LABELS['handoff catch']]:
+        idx = int(e_data_frame[BALL_PID_IDX]) - 1
 
-    r_start = f_data[PLAYER_POSITIONS][idx*2:idx*2+2]
-    r_final = f_data_next[PLAYER_POSITIONS][idx*2:idx*2+2]
-    v_current = f_data[PLAYER_VELOCITIES][idx*2:idx*2+2]
+    r_start = t_data_frame[PLAYER_POSITIONS][ idx*2 : idx*2+2 ]
+    r_final = t_data_frame_next[PLAYER_POSITIONS][ idx*2 : idx*2+2 ]
+    v_current = t_data_frame[PLAYER_VELOCITIES][ idx*2 : idx*2+2 ]
 
     return calc_time_to_intercept(r_start, r_final, v_current, accel, r_time, vmax)
 
