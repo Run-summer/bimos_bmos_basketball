@@ -55,6 +55,15 @@ def load_box_data(game_id):
     box_data_per_game = box_data.loc[box_data['game'] == game_id]
     return box_data_per_game
 
+def load_team_name(team_id):
+    """
+    Load team name.
+    """
+    team_data = pd.read_csv("basic_content/id_team.csv")
+    team_info = team_data.loc[team_data['team_id'] == team_id]
+    team_name = team_info.iloc[0]['team_2']
+    return team_name
+
 def get_pos_id(pos):
     """
     Convert pitch position to position array index.
