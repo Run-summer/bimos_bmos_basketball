@@ -1,7 +1,7 @@
 # bimos_bmos_basketball
 This repository is intended for analyzing STATS Sport VU tracking data and developing the BIMOS (Ball Intercept and Movement for Off-ball Scoring) and BMOS (Ball Movement for Off-Ball Scoring) models for basketball analysis. For a comprehensive explanation of the BIMOS/BMOS models, please refer to [our paper on arXiv](https://arxiv.org/abs/2406.08749), which has been accepted for the 11th workshop on Machine Learning and Data Mining for Sports Analytics (MLSA 2024).
 
-**Note:** This repository is a work in progress. We will continue to update it with additional code for data visualization and further analysis.
+**Note:** This repository is a work in progress. We will continue to update it with additional code for further analysis.
 
 ## Getting Started
 ### Data Preparation
@@ -14,3 +14,13 @@ curl "https://drive.usercontent.google.com/download?id=1GNaEO4C5kxJuJV2YHw6KpNDb
 curl "https://drive.usercontent.google.com/download?id=14y-U055lZ-D4snaaLKK1MVwwRc0Y4WS_&confirm=xxx" -o basic_content.zip
 ```
 Ensure that these files are placed in the same directory as the `SportVU_ControlField.py` file.
+
+### Running the Code
+1. To perform maximum likelihood estimation:
+   ```bash
+   python likelihood_estimation.py
+   ```
+2. To visualize the dataset:
+   ```bash
+   python Viz_sample.py
+   ```
