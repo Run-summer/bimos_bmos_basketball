@@ -24,3 +24,7 @@ Ensure that these files are placed in the same directory as the `SportVU_Control
    ```bash
    python Viz_sample.py
    ```
+3. To compare the expected score with actual score.:
+   ```bash
+   python compare_expected_actual_score.py
+   ```
