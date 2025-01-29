@@ -355,7 +355,7 @@ def calculate_ppcf_pass(target_position, attacking_players, defending_players, b
     if i < 3:
         # when target position is too close to current ball position
         # this process should be done in order to avoid that both PPCFa and PPCFd become <<1
-        return rel_att_id, rel_def_id, 1, 0
+        return rel_att_id, rel_def_id, PPCFatt[i-1] / (PPCFatt[i-1] + PPCFdef[i-1]), PPCFdef[i-1] / (PPCFatt[i-1] + PPCFdef[i-1])
     else:
         if PPCFatt[i-1] + PPCFdef[i-1] < 1 - params['model_converge_tol'] and i >= dt_array.size:
             return rel_att_id, rel_def_id, PPCFatt[i-1], PPCFdef[i-1]
@@ -415,7 +415,7 @@ def calculate_ppcf_dribble(target_position, attacking_players, defending_players
         if i < 3:
             # when target position is too close to current ball position
             # this process should be done in order to avoid that both PPCFa and PPCFd become <<1
-            return rel_att_id, rel_def_id, 1, 0
+            return rel_att_id, rel_def_id, PPCFatt[i-1] / (PPCFatt[i-1] + PPCFdef[i-1]), PPCFdef[i-1] / (PPCFatt[i-1] + PPCFdef[i-1])
         else:
             if PPCFatt[i-1] + PPCFdef[i-1] < 1 - params['model_converge_tol'] and i >= dt_array.size:
                 return rel_att_id, rel_def_id, PPCFatt[i-1], PPCFdef[i-1]
@@ -479,7 +479,7 @@ def calculate_pbcf_pass(target_position, attacking_players, defending_players, b
     if i < 3:
         # when target position is too close to current ball position
         # this process should be done in order to avoid that both PPCFa and PPCFd become <<1
-        return rel_att_ids, rel_def_ids, 1, 0
+        return rel_att_ids, rel_def_ids, PBCFatt[i-1] / (PBCFatt[i-1] + PBCFdef[i-1]), PBCFdef[i-1] / (PBCFatt[i-1] + PBCFdef[i-1])
     else:
         if PBCFatt[i-1] + PBCFdef[i-1] < 1 - params['model_converge_tol'] and i >= dt_array.size:
             return rel_att_ids, rel_def_ids, PBCFatt[i-1], PBCFdef[i-1]
@@ -544,7 +544,7 @@ def calculate_pbcf_dribble(target_position, attacking_players, defending_players
         if i < 3:
             # when target position is too close to current ball position
             # this process should be done in order to avoid that both PPCFa and PPCFd become <<1
-            return rel_att_ids, rel_def_ids, 1, 0
+            return rel_att_ids, rel_def_ids, PBCFatt[i-1] / (PBCFatt[i-1] + PBCFdef[i-1]), PBCFdef[i-1] / (PBCFatt[i-1] + PBCFdef[i-1])
         else:
             if PBCFatt[i-1] + PBCFdef[i-1] < 1 - params['model_converge_tol'] and i >= dt_array.size:
                 return rel_att_ids, rel_def_ids, PBCFatt[i-1], PBCFdef[i-1]
