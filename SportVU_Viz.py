@@ -15,6 +15,10 @@ import datetime
 import SportVU_IO as sio
 import SportVU_ControlField as scf
 
+# Constants for Dimension
+FEET_to_METER = 0.3048
+COURT_SIZE = np.array([94, 50]) * FEET_to_METER
+
 # Constants for t_data
 PLAYER_POSITIONS = slice(0, 20)
 BALL_POSITION = slice(20, 23)
@@ -45,11 +49,11 @@ EVENT_LABELS = {
 }
 
 def plotCourt():
-    court_path = './basic_content/nba_court_T.png'
+    court_path = './basic_content/nba_court.png'
     img = mpimg.imread(court_path)
-    plt.imshow(img, extent=[0, 28, 0, 15], zorder=0)
-    plt.xlim(0, 14)
-    plt.ylim(0, 15)
+    plt.imshow(img, extent=[0, COURT_SIZE[0], 0, COURT_SIZE[1]], zorder=0)
+    plt.xlim(0, COURT_SIZE[0]/2)
+    plt.ylim(0, COURT_SIZE[1])
 
 def plot_pitchcontrol_for_frame(
         game_id, s_id, f_id, params, fit_params, integral_xmin, version, 
