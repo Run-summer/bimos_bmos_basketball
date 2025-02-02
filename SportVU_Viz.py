@@ -58,7 +58,7 @@ def plotCourt():
 def plot_pitchcontrol_for_frame(
         game_id, s_id, f_id, params, fit_params, integral_xmin, version, 
         include_player_velocities=True, annotate=False, BID=True, target_position=False, 
-        colorbar=True, axis=True, title=True, field_dimen = (14.,15.), colormap="Reds"):
+        colorbar=True, axis=True, title=True, field_dimen = (COURT_SIZE[0]/2,COURT_SIZE[1]), colormap="Reds"):
     """
     Plots heatmaps for a specific frame.
 
@@ -171,7 +171,7 @@ def plot_pitchcontrol_for_frame(
 
 def plot_pitchcontrol_for_sequence(
         game_id, s_id, params, fit_params, integral_xmin, version, heatmap=True, 
-        EVENT=True, JERSEY=True, BID=False, axis=False, title=True, field_dimen=(14., 15.)):
+        EVENT=True, JERSEY=True, BID=False, axis=False, title=True, field_dimen=(COURT_SIZE[0]/2,COURT_SIZE[1])):
     """
     Plots animation for a specific scene.
 
