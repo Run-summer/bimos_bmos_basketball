@@ -116,7 +116,7 @@ def plot_pitchcontrol_for_frame(
         
     ax.imshow(attValue, cmap=colormap, extent=(0, field_dimen[0], 0, field_dimen[1]), alpha=0.9)
     if colorbar:
-        plt.colorbar(ax.imshow(attValue, cmap=colormap, alpha=0.9), ax=ax)
+        plt.colorbar(ax.imshow(attValue, cmap=colormap, extent=(0, field_dimen[0], 0, field_dimen[1]), alpha=0.9))
 
     plotCourt()
 
