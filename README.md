@@ -21,6 +21,7 @@ Ensure that these files are placed in the same directory as the `SportVU_Control
    ```bash
    python likelihood_estimation.py
    ```
+   <span style="color:red">⚠️ Note: The current versions of `calculate_pbcf_pass()` and `calculate_pbcf_dribble()` have an issue where the same players are not consistently included in each loop. As a temporary workaround, please set `probability_to_control` to zero.</span>
 2. To visualize the dataset:
    ```bash
    python Viz_sample.py

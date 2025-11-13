@@ -146,7 +146,7 @@ def default_model_params(accel, kappa, lam, att_reaction_time, def_reaction_time
         'int_dt': 0.01,
         'max_int_time': 10.,
         'model_converge_tol': 0.01,
-        'probability_to_control': 0.01,
+        'probability_to_control': 0,
     }
     return params
 
