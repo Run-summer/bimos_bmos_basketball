@@ -12,6 +12,7 @@ Alternatively, you can download the files using the following commands:
 ```bash
 curl "https://drive.usercontent.google.com/download?id=1GNaEO4C5kxJuJV2YHw6KpNDbmsAMXPqr&confirm=xxx" -o allevents_dataset.mat
 curl "https://drive.usercontent.google.com/download?id=14y-U055lZ-D4snaaLKK1MVwwRc0Y4WS_&confirm=xxx" -o basic_content.zip
+curl "https://drive.usercontent.google.com/download?id=1Jl8sCVGnrzrYNvV9q92E6d4ey15gVNWl&confirm=xxx" -o onballevents_dataset.mat
 ```
 Ensure that these files are placed in the same directory as the `SportVU_ControlField.py` file.
 
